@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <linux/fb.h>
+// #include <linux/fb.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
@@ -17,73 +17,100 @@ int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
 
-int fbfd = 0;
-struct fb_var_screeninfo vinfo;
-struct fb_fix_screeninfo finfo;
-long int screensize = 0;
-char *fbp = 0;
 long int location = 0;
 
-void printMatrix() {
-
-    /* // display merge center
-    // Menulis ke layar tengah file
-    for (int y = vinfo.yres/2 - WIDTH/2; y < WIDTH + vinfo.yres/2 - WIDTH/2; y++) {
-        for (int x = vinfo.xres/2 - HEIGHT/2; x < HEIGHT + vinfo.xres/2 - HEIGHT/2; x++) {
-            location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
-            //printf("location: %ld\n",location);
-            if (vinfo.bits_per_pixel == 32) { 
-                //4byte
-                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];        // Some blue
-                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];     // A little green
-                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];    // A lot of red
-                    *(fbp + location + 3) = 0;      // No transparency
-            //location += 4;
-            } else  { //assume 16bpp
-                int b = 0;
-                int g = 100;     // A little green
-                int r = 0;    // A lot of red
-                unsigned short int t = r<<11 | g << 5 | b;
-                *((unsigned short int*)(fbp + location)) = t;
-            }
+void clearMatrix() {
+    for (int i = 0; i < WIDTH; ++i)
+    {
+        for (int j = 0; j < HEIGHT; ++j)
+        {
+            redPixelMatrix[i][j] = 0;
+            greenPixelMatrix[i][j] = 0;
+            bluePixelMatrix[i][j] = 0;
         }
-    } */
+    }
 }
 
-int main()
-{
-    //INITIALIZE
-    // Open the file for reading and writing framebuffer
-    fbfd = open("/dev/fb0", O_RDWR);
-    if (fbfd == -1) {
-        perror("Error: cannot open framebuffer device");
-        exit(1);
+void printMatrix() { // change to frame buffer
+    for (int i = 0; i < WIDTH; ++i)
+    {
+        for (int j = 0; j < HEIGHT; ++j)
+        {
+            if (bluePixelMatrix[i][j] != 0) {
+                cout << 0;
+            } else {
+                cout << '-';
+            }
+        }
+        cout << endl;
     }
-    //printf("The framebuffer device was opened successfully.\n");
+}
 
-    // Get fixed screen information
-    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
-        perror("Error reading fixed information");
-        exit(2);
+void drawWhitePoint(int x1, int y1) {
+    redPixelMatrix[x1][y1] = 255;
+    greenPixelMatrix[x1][y1] = 255;
+    bluePixelMatrix[x1][y1] = 255;
+}
+
+void drawWhiteLine(int x1, int y1, int x2, int y2) {
+    int deltaX = abs(x2 - x1);
+    int deltaY = abs(y2 - y1);
+    int ix = deltaX > 0 ? 1 : -1;
+    int iy = deltaY > 0 ? 1 : -1;
+
+    int x = x1;
+    int y = y1;
+
+    drawWhitePoint(x,y);
+
+    if (deltaX >= deltaY) {
+        int error = 2 * deltaY - deltaX;
+
+        while (x != x2) {
+            if ((error >= 0) && (error || (ix > 0)))
+            {
+                error -= deltaX;
+                y += iy;
+            }
+ 
+            error += deltaY;
+            x += ix;
+ 
+            drawWhitePoint(x, y);
+        }
+    } else {
+        int error = 2 * deltaX - deltaY;
+
+        while (y != y2)
+        {
+            if ((error >= 0) && (error || (iy > 0)))
+            {
+                error -= deltaY;
+                x += ix;
+            }
+ 
+            error += deltaX;
+            y += iy;
+ 
+            drawWhitePoint(x, y);
+        }
     }
-    // Get variable screen information
-    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
-        perror("Error reading variable information");
-        exit(3);
-    }
+}
 
-    // mendapat screensize layar monitor
-    screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
-    //printf("screensize %ld\n",screensize);
+int main() {
+    clearMatrix();
+    drawWhiteLine(1, 1, 5, 1);
+    printMatrix();
+    cout << endl;
 
-    // Map the device to memory
-    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
-    //printf("The framebuffer device was mapped to memory successfully.\n");
-    //INITIALIZE*
+    drawWhiteLine(4, 7, 10, 15);
+    printMatrix();
+    cout << endl;
 
-    // terminate
-    munmap(fbp, screensize);
-    close(fbfd);
-    // terminate
-return 0;
+    clearMatrix();
+
+    drawWhiteLine(1, 2, 3, 4);
+    printMatrix();
+    cout << endl;
+    return 0;
 }
