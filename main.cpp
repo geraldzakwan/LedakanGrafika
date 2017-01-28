@@ -52,6 +52,32 @@ void drawWhitePoint(int x1, int y1) {
     bluePixelMatrix[x1][y1] = 255;
 }
 
+void drawCircle(int x0, int y0, int radius)
+{
+    int x = radius;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y)
+    {
+        drawWhitePoint(x0 - x, y0 + y);
+        drawWhitePoint(x0 - y, y0 + x); 
+        drawWhitePoint(x0 - y, y0 - x);
+        drawWhitePoint(x0 - x, y0 - y);
+
+        if (err <= 0)
+        {
+            y += 1;
+            err += 2*y + 1;
+        }
+        if (err > 0)
+        {
+            x -= 1;
+            err -= 2*x + 1;
+        }
+    }
+}
+
 void drawWhiteLine(int x1, int y1, int x2, int y2) {
 	//Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
     int deltaX = x2 - x1;
@@ -111,16 +137,19 @@ int main() {
 
     clearMatrix();
     //Gambar trapesium
-    drawWhiteLine(100, 400, 120, 420);
-    drawWhiteLine(100, 400, 100, 350);
-    drawWhiteLine(100, 350, 120, 330);
-    drawWhiteLine(120, 330, 120, 420);
+    drawWhiteLine(50, 250, 70, 270);
+    drawWhiteLine(50, 250, 50, 200);
+    drawWhiteLine(50, 200, 70, 180);
+    drawWhiteLine(70, 180, 70, 270);
+
+    //Gambar circle
+    drawCircle(50, 225, 25);    
 
     //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
-    drawWhiteLine(0, 0, 0, 800);
-    drawWhiteLine(0, 800, 600, 800);
-    drawWhiteLine(600, 800, 600, 0);
-    drawWhiteLine(600, 0, 0, 0);
+    drawWhiteLine(0, 0, 0, 400);
+    drawWhiteLine(0, 400, 300, 400);
+    drawWhiteLine(300, 400, 300, 0);
+    drawWhiteLine(300, 0, 0, 0);
 
     // Open the file for reading and writing framebuffer
     fbfd = open("/dev/fb0", O_RDWR);
