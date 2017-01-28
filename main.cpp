@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-// #include <linux/fb.h>
+#include <linux/fb.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
@@ -53,10 +53,13 @@ void drawWhitePoint(int x1, int y1) {
 }
 
 void drawWhiteLine(int x1, int y1, int x2, int y2) {
-    int deltaX = abs(x2 - x1);
-    int deltaY = abs(y2 - y1);
+	//Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
+    int deltaX = x2 - x1;
+    int deltaY = y2 - y1;
     int ix = deltaX > 0 ? 1 : -1;
     int iy = deltaY > 0 ? 1 : -1;
+    deltaX = abs(deltaX);
+    deltaY = abs(deltaY);
 
     int x = x1;
     int y = y1;
@@ -98,19 +101,120 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
 }
 
 int main() {
+	int fbfd = 0;
+    struct fb_var_screeninfo vinfo;
+    struct fb_fix_screeninfo finfo;
+    long int screensize = 0;
+    char *fbp = 0;
+    int x = 0, y = 0;
+    long int location = 0;
+
     clearMatrix();
-    drawWhiteLine(1, 1, 5, 1);
-    printMatrix();
-    cout << endl;
+    //Gambar trapesium
+    drawWhiteLine(100, 400, 120, 420);
+    drawWhiteLine(100, 400, 100, 350);
+    drawWhiteLine(100, 350, 120, 330);
+    drawWhiteLine(120, 330, 120, 420);
 
-    drawWhiteLine(4, 7, 10, 15);
-    printMatrix();
-    cout << endl;
+    //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
+    drawWhiteLine(0, 0, 0, 800);
+    drawWhiteLine(0, 800, 600, 800);
+    drawWhiteLine(600, 800, 600, 0);
+    drawWhiteLine(600, 0, 0, 0);
 
-    clearMatrix();
+    // Open the file for reading and writing framebuffer
+    fbfd = open("/dev/fb0", O_RDWR);
+    if (fbfd == -1) {
+        perror("Error: cannot open framebuffer device");
+        exit(1);
+    }
+    //printf("The framebuffer device was opened successfully.\n");
 
-    drawWhiteLine(1, 2, 3, 4);
-    printMatrix();
-    cout << endl;
+    // Get fixed screen information
+    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
+        perror("Error reading fixed information");
+        exit(2);
+    }
+    // Get variable screen information
+    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
+        perror("Error reading variable information");
+        exit(3);
+    }
+    //printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+
+    // mendapat screensize layar monitor
+    screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
+    //printf("screensize %ld\n",screensize);
+
+    // Map the device to memory
+    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
+    //printf("The framebuffer device was mapped to memory successfully.\n");
+
+    //display merge center
+    // Menulis ke layar tengah file
+    for (y = vinfo.yres/2 - HEIGHT/2; y < HEIGHT + vinfo.yres/2 - HEIGHT/2; y++)
+        for (x = vinfo.xres/2 - WIDTH/2; x < WIDTH + vinfo.xres/2 - WIDTH/2; x++) {
+            location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+            //printf("location: %ld\n",location);
+            if (vinfo.bits_per_pixel == 32) { 
+                //4byte
+                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];        // Some blue
+                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];     // A little green
+                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];    // A lot of red
+                    *(fbp + location + 3) = 0;      // No transparency
+            //location += 4;
+            } else  { //assume 16bpp
+                int b = 0;
+                int g = 100;     // A little green
+                int r = 0;    // A lot of red
+                unsigned short int t = r<<11 | g << 5 | b;
+                *((unsigned short int*)(fbp + location)) = t;
+            }
+        }
+    //int i=HEIGHT + vinfo.yres/2 - HEIGHT/2;
+    //printf("%d\n",i);
+
+    /*
+    int count = 0;
+    do{
+        i--;       
+        count++;
+        for (y = vinfo.yres/2 - HEIGHT/2; y < HEIGHT + vinfo.yres/2 - HEIGHT/2; y++){
+            //printf("%d\n",y);
+            for (x = vinfo.xres/2 - WIDTH/2; x < WIDTH + vinfo.xres/2 - WIDTH/2; x++) {
+                location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+                //printf("location: %ld\n",location);
+                //printf("%d %d\n",y,i);
+                //usleep(400000);
+                if(y>i-1){
+                    *(fbp + location) = 0;      // Some blue
+                    *(fbp + location + 1) = 0;   // A little green
+                    *(fbp + location + 2) = 0;    // A lot of red
+                    *(fbp + location + 3) = 0;      // No transparency
+                }else if (vinfo.bits_per_pixel == 32){ 
+                //4byte
+                    *(fbp + location) = arraypixel[2][(y - vinfo.yres/2 + HEIGHT/2 + count) % HEIGHT +1][x - vinfo.xres/2 + WIDTH/2];        // Some blue
+                    *(fbp + location + 1) = arraypixel[1][(y - vinfo.yres/2 + HEIGHT/2 + count) % HEIGHT +1][x - vinfo.xres/2 + WIDTH/2];     // A little green
+                    *(fbp + location + 2) = arraypixel[0][(y - vinfo.yres/2 + HEIGHT/2 + count) % HEIGHT +1][x - vinfo.xres/2 + WIDTH/2];    // A lot of red
+                    *(fbp + location + 3) = 0;      // No transparency
+                //location += 4;
+                }
+                else  { //assume 16bpp
+                    int b = 0;
+                    int g = 100;     // A little green
+                    int r = 0;    // A lot of red
+                    unsigned short int t = r<<11 | g << 5 | b;
+                    *((unsigned short int*)(fbp + location)) = t;
+                }
+            }
+        }
+        //printf("masuk\n");    
+        usleep(40000);    
+    }while(!(i==vinfo.yres/2 - HEIGHT/2));
+    */
+
+    munmap(fbp, screensize);
+    close(fbfd);
+
     return 0;
 }
