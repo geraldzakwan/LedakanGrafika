@@ -33,7 +33,7 @@ void clearMatrix() {
     }
 }
 
-void printMatrix() { // change to frame buffer
+void printMatrix() {
     for (int i = 0; i < WIDTH; ++i)
     {
         for (int j = 0; j < HEIGHT; ++j)
@@ -45,6 +45,29 @@ void printMatrix() { // change to frame buffer
             }
         }
         cout << endl;
+    }
+}
+
+void printMatrixToFrameBuffer() {
+    for (y = vinfo.yres/2 - pixelrow/2; y < pixelrow + vinfo.yres/2 - pixelrow/2; y++) {
+        for (x = vinfo.xres/2 - pixelcol/2; x < pixelcol + vinfo.xres/2 - pixelcol/2; x++) {
+            location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+            //printf("location: %ld\n",location);
+            if (vinfo.bits_per_pixel == 32) { 
+                //4byte
+                    *(fbp + location) = arraypixel[2][y - vinfo.yres/2 + pixelrow/2][x - vinfo.xres/2 + pixelcol/2];        // Some blue
+                    *(fbp + location + 1) = arraypixel[1][y - vinfo.yres/2 + pixelrow/2][x - vinfo.xres/2 + pixelcol/2];     // A little green
+                    *(fbp + location + 2) = arraypixel[0][y - vinfo.yres/2 + pixelrow/2][x - vinfo.xres/2 + pixelcol/2];    // A lot of red
+                    *(fbp + location + 3) = 0;      // No transparency
+            //location += 4;
+            } else  { //assume 16bpp
+                int b = 0;
+                int g = 100;     // A little green
+                int r = 0;    // A lot of red
+                unsigned short int t = r<<11 | g << 5 | b;
+                *((unsigned short int*)(fbp + location)) = t;
+            }
+        }
     }
 }
 
@@ -202,68 +225,7 @@ int main() {
     fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
     //printf("The framebuffer device was mapped to memory successfully.\n");
 
-    //display merge center
-    // Menulis ke layar tengah file
-    for (y = vinfo.yres/2 - HEIGHT/2; y < HEIGHT + vinfo.yres/2 - HEIGHT/2; y++)
-        for (x = vinfo.xres/2 - WIDTH/2; x < WIDTH + vinfo.xres/2 - WIDTH/2; x++) {
-            location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
-            //printf("location: %ld\n",location);
-            if (vinfo.bits_per_pixel == 32) { 
-                //4byte
-                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];        // Some blue
-                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];     // A little green
-                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];    // A lot of red
-                    *(fbp + location + 3) = 0;      // No transparency
-            //location += 4;
-            } else  { //assume 16bpp
-                int b = 0;
-                int g = 100;     // A little green
-                int r = 0;    // A lot of red
-                unsigned short int t = r<<11 | g << 5 | b;
-                *((unsigned short int*)(fbp + location)) = t;
-            }
-        }
-    //int i=HEIGHT + vinfo.yres/2 - HEIGHT/2;
-    //printf("%d\n",i);
-
-    /*
-    int count = 0;
-    do{
-        i--;       
-        count++;
-        for (y = vinfo.yres/2 - HEIGHT/2; y < HEIGHT + vinfo.yres/2 - HEIGHT/2; y++){
-            //printf("%d\n",y);
-            for (x = vinfo.xres/2 - WIDTH/2; x < WIDTH + vinfo.xres/2 - WIDTH/2; x++) {
-                location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
-                //printf("location: %ld\n",location);
-                //printf("%d %d\n",y,i);
-                //usleep(400000);
-                if(y>i-1){
-                    *(fbp + location) = 0;      // Some blue
-                    *(fbp + location + 1) = 0;   // A little green
-                    *(fbp + location + 2) = 0;    // A lot of red
-                    *(fbp + location + 3) = 0;      // No transparency
-                }else if (vinfo.bits_per_pixel == 32){ 
-                //4byte
-                    *(fbp + location) = arraypixel[2][(y - vinfo.yres/2 + HEIGHT/2 + count) % HEIGHT +1][x - vinfo.xres/2 + WIDTH/2];        // Some blue
-                    *(fbp + location + 1) = arraypixel[1][(y - vinfo.yres/2 + HEIGHT/2 + count) % HEIGHT +1][x - vinfo.xres/2 + WIDTH/2];     // A little green
-                    *(fbp + location + 2) = arraypixel[0][(y - vinfo.yres/2 + HEIGHT/2 + count) % HEIGHT +1][x - vinfo.xres/2 + WIDTH/2];    // A lot of red
-                    *(fbp + location + 3) = 0;      // No transparency
-                //location += 4;
-                }
-                else  { //assume 16bpp
-                    int b = 0;
-                    int g = 100;     // A little green
-                    int r = 0;    // A lot of red
-                    unsigned short int t = r<<11 | g << 5 | b;
-                    *((unsigned short int*)(fbp + location)) = t;
-                }
-            }
-        }
-        //printf("masuk\n");    
-        usleep(40000);    
-    }while(!(i==vinfo.yres/2 - HEIGHT/2));
-    */
+    printMatrixToFrameBuffer();
 
     munmap(fbp, screensize);
     close(fbfd);
