@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <linux/fb.h>
+// #include <linux/fb.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <cstdio>
@@ -15,14 +15,25 @@ using namespace std;
 #define HEIGHT 800
 #define WIDTH 600
 
+int fbfd = 0;
+struct fb_var_screeninfo vinfo;
+struct fb_fix_screeninfo finfo;
+long int screensize = 0;
+char *fbp = 0;
+int x = 0, y = 0;
+long int location = 0;
+
 int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
 
+<<<<<<< HEAD
 long int location = 0;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
 
+=======
+>>>>>>> 59e095e63ea5a4a5dd7748b739ce05dd16c40aca
 void clearMatrix() {
     for (int i = 0; i < WIDTH; ++i)
     {
@@ -35,7 +46,7 @@ void clearMatrix() {
     }
 }
 
-void printMatrix() { // change to frame buffer
+void printMatrix() { // print ke stdio
     for (int i = 0; i < WIDTH; ++i)
     {
         for (int j = 0; j < HEIGHT; ++j)
@@ -47,6 +58,31 @@ void printMatrix() { // change to frame buffer
             }
         }
         cout << endl;
+    }
+}
+
+void printMatrixToFrameBuffer() {
+    //display merge center
+    // Menulis ke layar tengah file
+    for (y = vinfo.yres/2 - WIDTH/2; y < WIDTH + vinfo.yres/2 - WIDTH/2; y++) {
+        for (x = vinfo.xres/2 - HEIGHT/2; x < HEIGHT + vinfo.xres/2 - HEIGHT/2; x++) {
+            location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+            //printf("location: %ld\n",location);
+            if (vinfo.bits_per_pixel == 32) { 
+                //4byte
+                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];        // Some blue
+                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];     // A little green
+                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];    // A lot of red
+                    *(fbp + location + 3) = 0;      // No transparency
+            //location += 4;
+            } else  { //assume 16bpp
+                int b = 0;
+                int g = 100;     // A little green
+                int r = 0;    // A lot of red
+                unsigned short int t = r<<11 | g << 5 | b;
+                *((unsigned short int*)(fbp + location)) = t;
+            }
+        }
     }
 }
 
@@ -192,6 +228,7 @@ int detectKeyStroke() {
     return NByte;
 }
 
+<<<<<<< HEAD
 void DrawToScreen(){
     /* prosedure yang menggambar ke layar dari matriks RGB (harusnya rata tengah)*/
     int fbfd = 0;
@@ -199,6 +236,33 @@ void DrawToScreen(){
     char *fbp = 0;
     long int location = 0;
     int x , y;
+=======
+int main() {
+    clearMatrix();
+    //Gambar trapesium
+    drawWhiteLine(50, 250, 70, 270);
+    drawWhiteLine(50, 250, 50, 200);
+    drawWhiteLine(50, 200, 70, 180);
+    drawWhiteLine(70, 180, 70, 270);
+
+    //Gambar circle
+    drawSemiCircle(50, 225, 25);    
+
+    //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
+    drawWhiteLine(0, 0, 0, 400);
+    drawWhiteLine(0, 400, 300, 400);
+    drawWhiteLine(300, 400, 300, 0);
+    drawWhiteLine(300, 0, 0, 0);
+
+    eraseWithBlackBox(0,0,100,100);
+    //pusat lingkaran
+    int xp = 150;
+    int yp = 275;
+    char KeyPressed;
+    
+    
+    // Open the file for reading and writing framebuffer
+>>>>>>> 59e095e63ea5a4a5dd7748b739ce05dd16c40aca
     fbfd = open("/dev/fb0", O_RDWR);
     if (fbfd == -1) {
         perror("Error: cannot open framebuffer device");
@@ -226,6 +290,7 @@ void DrawToScreen(){
     fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
     //printf("The framebuffer device was mapped to memory successfully.\n");
 
+<<<<<<< HEAD
     //display merge center
     // Menulis ke layar tengah file
     printf("before loop\n");
@@ -323,12 +388,39 @@ int main() {
                     unsigned short int t = r<<11 | g << 5 | b;
                     *((unsigned short int*)(fbp + location)) = t;
                 }
-            }
+=======
+    do {
+        while (!detectKeyStroke()) {
+            //do nothing
         }
-        //printf("masuk\n");    
-        usleep(40000);    
-    }while(!(i==vinfo.yres/2 - HEIGHT/2));
-    */
+        KeyPressed = getchar();
+        switch (KeyPressed) {
+            case 'D': {
+                drawCircle(yp,xp,25);
+                drawWhiteLine(yp,xp+25,yp-25,xp+50);
+                drawWhiteLine(yp-25,xp,yp-50,xp+25);
+                drawWhiteLine(yp-25,xp+50,yp-50,xp+25);            
+                break;
+>>>>>>> 59e095e63ea5a4a5dd7748b739ce05dd16c40aca
+            }
+            case 'S': {
+                drawCircle(yp,xp,25);
+                drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
+                drawWhiteLine(yp-15,xp-20,yp-50,xp-20);
+                drawWhiteLine(yp-50,xp+20,yp-50,xp-20);
+                break;
+            }
+            case 'A': {
+                drawCircle(yp,xp,25);
+                drawWhiteLine(yp,xp-25,yp-25,xp-50);
+                drawWhiteLine(yp-25,xp,yp-50,xp-25);
+                drawWhiteLine(yp-25,xp-50,yp-50,xp-25);
+                break;
+            } 
+        }
+    } while (KeyPressed!='C');
+
+    printMatrixToFrameBuffer();
 
     
 
