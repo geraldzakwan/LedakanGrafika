@@ -15,6 +15,14 @@ using namespace std;
 #define HEIGHT 600
 #define WIDTH 800
 
+int fbfd = 0;
+struct fb_var_screeninfo vinfo;
+struct fb_fix_screeninfo finfo;
+long int screensize = 0;
+char *fbp = 0;
+int x = 0, y = 0;
+long int location = 0;
+    
 int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
@@ -173,14 +181,6 @@ int detectKeyStroke() {
 }
 
 int main() {
-	int fbfd = 0;
-    struct fb_var_screeninfo vinfo;
-    struct fb_fix_screeninfo finfo;
-    long int screensize = 0;
-    char *fbp = 0;
-    int x = 0, y = 0;
-    long int location = 0;
-
     clearMatrix();
     //Gambar trapesium
     drawWhiteLine(50, 250, 70, 270);
