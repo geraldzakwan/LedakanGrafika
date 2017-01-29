@@ -243,6 +243,35 @@ int main() {
     int xp = 150;
     int yp = 275;
     char KeyPressed;
+    
+    
+    // Open the file for reading and writing framebuffer
+    fbfd = open("/dev/fb0", O_RDWR);
+    if (fbfd == -1) {
+        perror("Error: cannot open framebuffer device");
+        exit(1);
+    }
+    //printf("The framebuffer device was opened successfully.\n");
+
+    // Get fixed screen information
+    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
+        perror("Error reading fixed information");
+        exit(2);
+    }
+    // Get variable screen information
+    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
+        perror("Error reading variable information");
+        exit(3);
+    }
+    //printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+
+    // mendapat screensize layar monitor
+    screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
+    //printf("screensize %ld\n",screensize);
+
+    // Map the device to memory
+    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
+    //printf("The framebuffer device was mapped to memory successfully.\n");
 
     do {
         while (!detectKeyStroke()) {
@@ -273,35 +302,6 @@ int main() {
             } 
         }
     } while (KeyPressed!='C');
-
-    
-    // Open the file for reading and writing framebuffer
-    fbfd = open("/dev/fb0", O_RDWR);
-    if (fbfd == -1) {
-        perror("Error: cannot open framebuffer device");
-        exit(1);
-    }
-    //printf("The framebuffer device was opened successfully.\n");
-
-    // Get fixed screen information
-    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
-        perror("Error reading fixed information");
-        exit(2);
-    }
-    // Get variable screen information
-    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
-        perror("Error reading variable information");
-        exit(3);
-    }
-    //printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
-
-    // mendapat screensize layar monitor
-    screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
-    //printf("screensize %ld\n",screensize);
-
-    // Map the device to memory
-    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
-    //printf("The framebuffer device was mapped to memory successfully.\n");
 
     printMatrixToFrameBuffer();
 
