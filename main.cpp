@@ -12,14 +12,16 @@
 
 using namespace std;
 
-#define HEIGHT 600
-#define WIDTH 800
+#define HEIGHT 800
+#define WIDTH 600
 
 int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
 
 long int location = 0;
+struct fb_var_screeninfo vinfo;
+struct fb_fix_screeninfo finfo;
 
 void clearMatrix() {
     for (int i = 0; i < WIDTH; ++i)
@@ -190,34 +192,13 @@ int detectKeyStroke() {
     return NByte;
 }
 
-int main() {
-	int fbfd = 0;
-    struct fb_var_screeninfo vinfo;
-    struct fb_fix_screeninfo finfo;
+void DrawToScreen(){
+    /* prosedure yang menggambar ke layar dari matriks RGB (harusnya rata tengah)*/
+    int fbfd = 0;
     long int screensize = 0;
     char *fbp = 0;
-    int x = 0, y = 0;
     long int location = 0;
-
-    clearMatrix();
-    //Gambar trapesium
-    drawWhiteLine(50, 250, 70, 270);
-    drawWhiteLine(50, 250, 50, 200);
-    drawWhiteLine(50, 200, 70, 180);
-    drawWhiteLine(70, 180, 70, 270);
-
-    //Gambar circle
-    drawSemiCircle(50, 225, 25);    
-
-    //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
-    drawWhiteLine(0, 0, 0, 400);
-    drawWhiteLine(0, 400, 300, 400);
-    drawWhiteLine(300, 400, 300, 0);
-    drawWhiteLine(300, 0, 0, 0);
-
-    eraseWithBlackBox(0,0,100,100);
-
-    // Open the file for reading and writing framebuffer
+    int x , y;
     fbfd = open("/dev/fb0", O_RDWR);
     if (fbfd == -1) {
         perror("Error: cannot open framebuffer device");
@@ -247,15 +228,16 @@ int main() {
 
     //display merge center
     // Menulis ke layar tengah file
-    for (y = vinfo.yres/2 - HEIGHT/2; y < HEIGHT + vinfo.yres/2 - HEIGHT/2; y++)
-        for (x = vinfo.xres/2 - WIDTH/2; x < WIDTH + vinfo.xres/2 - WIDTH/2; x++) {
+    printf("before loop\n");
+    for (y = vinfo.yres/2 - WIDTH/2; y < WIDTH + vinfo.yres/2 - WIDTH/2; y++)
+        for (x = vinfo.xres/2 - HEIGHT/2; x < HEIGHT + vinfo.xres/2 - HEIGHT/2; x++) {
             location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
             //printf("location: %ld\n",location);
             if (vinfo.bits_per_pixel == 32) { 
                 //4byte
-                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];        // Some blue
-                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];     // A little green
-                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + HEIGHT/2][x - vinfo.xres/2 + WIDTH/2];    // A lot of red
+                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];        // Some blue
+                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];     // A little green
+                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];    // A lot of red
                     *(fbp + location + 3) = 0;      // No transparency
             //location += 4;
             } else  { //assume 16bpp
@@ -266,6 +248,46 @@ int main() {
                 *((unsigned short int*)(fbp + location)) = t;
             }
         }
+    printf("after loop\n");
+    munmap(fbp, screensize);
+    close(fbfd);
+}
+
+int main() {
+    printf("masuk\n");
+	
+    
+    
+    
+    
+    
+
+    clearMatrix();
+    printf("masuk clearMatrix\n");
+    //Gambar trapesium
+    drawWhiteLine(50, 250, 70, 270);
+    drawWhiteLine(50, 250, 50, 200);
+    drawWhiteLine(50, 200, 70, 180);
+    drawWhiteLine(70, 180, 70, 270);
+    printf("masuk gambar trapesium\n");
+
+    //Gambar circle
+    drawSemiCircle(50, 225, 25);    
+    printf("masuk gambar semicircle\n");
+
+    //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
+    drawWhiteLine(0, 0, 0, 400);
+    drawWhiteLine(0, 400, 300, 400);
+    drawWhiteLine(300, 400, 300, 0);
+    drawWhiteLine(300, 0, 0, 0);
+    printf("masuk gambar arena\n");
+
+    //eraseWithBlackBox(0,0,100,100);
+    printf("masu erase black box\n");
+
+    DrawToScreen();
+    // Open the file for reading and writing framebuffer
+
     //int i=HEIGHT + vinfo.yres/2 - HEIGHT/2;
     //printf("%d\n",i);
 
@@ -308,8 +330,7 @@ int main() {
     }while(!(i==vinfo.yres/2 - HEIGHT/2));
     */
 
-    munmap(fbp, screensize);
-    close(fbfd);
+    
 
     return 0;
 }
