@@ -192,6 +192,32 @@ int detectKeyStroke() {
     return NByte;
 }
 
+void drawShooter(int xp, int yp, char mode) {
+    switch (mode) {
+        case 'D': {
+            drawCircle(yp,xp,25);
+            drawWhiteLine(yp,xp+25,yp-25,xp+50);
+            drawWhiteLine(yp-25,xp,yp-50,xp+25);
+            drawWhiteLine(yp-25,xp+50,yp-50,xp+25);            
+            break;
+        }
+        case 'S': {
+            drawCircle(yp,xp,25);
+            drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
+            drawWhiteLine(yp-15,xp-20,yp-50,xp-20);
+            drawWhiteLine(yp-50,xp+20,yp-50,xp-20);
+            break;
+        }
+        case 'A': {
+            drawCircle(yp,xp,25);
+            drawWhiteLine(yp,xp-25,yp-25,xp-50);
+            drawWhiteLine(yp-25,xp,yp-50,xp-25);
+            drawWhiteLine(yp-25,xp-50,yp-50,xp-25);
+            break;
+        } 
+    }
+}
+
 void DrawToScreen(){
     /* prosedure yang menggambar ke layar dari matriks RGB (harusnya rata tengah)*/
     int fbfd = 0;
@@ -275,7 +301,6 @@ int main() {
     drawWhiteLine(300, 0, 0, 0);
     printf("masuk gambar arena\n");
 
-    //eraseWithBlackBox(0,0,100,100);
     printf("masuk erase black box\n");
     int xp = 150;
     int yp = 275;
