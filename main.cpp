@@ -17,6 +17,7 @@ using namespace std;
 
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
+char *fbp = 0;
 
 int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
@@ -194,12 +195,40 @@ int detectKeyStroke() {
 
 void DrawToScreen(){
     /* prosedure yang menggambar ke layar dari matriks RGB (harusnya rata tengah)*/
-    int fbfd = 0;
-    long int screensize = 0;
-    char *fbp = 0;
     long int location = 0;
     int x , y;
+    printf("before loop\n");
+    for (y = vinfo.yres/2 - WIDTH/2; y < WIDTH + vinfo.yres/2 - WIDTH/2; y++)
+        for (x = vinfo.xres/2 - HEIGHT/2; x < HEIGHT + vinfo.xres/2 - HEIGHT/2; x++) {
+            location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+            //printf("location: %ld\n",location);
+            if (vinfo.bits_per_pixel == 32) { 
+                //4byte
+                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];        // Some blue
+                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];     // A little green
+                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];    // A lot of red
+                    *(fbp + location + 3) = 0;      // No transparency
+            //location += 4;
+            } else  { //assume 16bpp
+                int b = 0;
+                int g = 100;     // A little green
+                int r = 0;    // A lot of red
+                unsigned short int t = r<<11 | g << 5 | b;
+                *((unsigned short int*)(fbp + location)) = t;
+            }
+        }
+    printf("after loop\n");    
+}
 
+int main() {
+    //printf("masuk\n");
+    clearMatrix();
+    printf("masuk clearMatrix\n");
+    
+    int fbfd = 0;
+    long int screensize = 0;
+   
+    
     fbfd = open("/dev/fb0", O_RDWR);
     if (fbfd == -1) {
         perror("Error: cannot open framebuffer device");
@@ -228,35 +257,6 @@ void DrawToScreen(){
     //printf("The framebuffer device was mapped to memory successfully.\n");
     //display merge center
     // Menulis ke layar tengah file
-    printf("before loop\n");
-    for (y = vinfo.yres/2 - WIDTH/2; y < WIDTH + vinfo.yres/2 - WIDTH/2; y++)
-        for (x = vinfo.xres/2 - HEIGHT/2; x < HEIGHT + vinfo.xres/2 - HEIGHT/2; x++) {
-            location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
-            //printf("location: %ld\n",location);
-            if (vinfo.bits_per_pixel == 32) { 
-                //4byte
-                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];        // Some blue
-                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];     // A little green
-                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];    // A lot of red
-                    *(fbp + location + 3) = 0;      // No transparency
-            //location += 4;
-            } else  { //assume 16bpp
-                int b = 0;
-                int g = 100;     // A little green
-                int r = 0;    // A lot of red
-                unsigned short int t = r<<11 | g << 5 | b;
-                *((unsigned short int*)(fbp + location)) = t;
-            }
-        }
-    printf("after loop\n");
-    munmap(fbp, screensize);
-    close(fbfd);
-}
-
-int main() {
-    printf("masuk\n");
-    clearMatrix();
-    printf("masuk clearMatrix\n");
     //Gambar trapesium
     drawWhiteLine(50, 250, 70, 270);
     drawWhiteLine(50, 250, 50, 200);
@@ -280,6 +280,10 @@ int main() {
     int xp = 150;
     int yp = 275;
     char KeyPressed;
-    DrawToScreen();  
+    DrawToScreen();
+
+
+    munmap(fbp, screensize);
+    close(fbfd);  
     return 0;
 }
