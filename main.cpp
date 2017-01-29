@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <linux/fb.h>
+// #include <linux/fb.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <cstdio>
@@ -22,12 +22,10 @@ long int screensize = 0;
 char *fbp = 0;
 int x = 0, y = 0;
 long int location = 0;
-    
+
 int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
-
-long int location = 0;
 
 void clearMatrix() {
     for (int i = 0; i < WIDTH; ++i)
@@ -57,15 +55,17 @@ void printMatrix() {
 }
 
 void printMatrixToFrameBuffer() {
-    for (y = vinfo.yres/2 - pixelrow/2; y < pixelrow + vinfo.yres/2 - pixelrow/2; y++) {
-        for (x = vinfo.xres/2 - pixelcol/2; x < pixelcol + vinfo.xres/2 - pixelcol/2; x++) {
+    //display merge center
+    // Menulis ke layar tengah file
+    for (y = vinfo.yres/2 - WIDTH/2; y < WIDTH + vinfo.yres/2 - WIDTH/2; y++) {
+        for (x = vinfo.xres/2 - HEIGHT/2; x < HEIGHT + vinfo.xres/2 - HEIGHT/2; x++) {
             location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
             //printf("location: %ld\n",location);
             if (vinfo.bits_per_pixel == 32) { 
                 //4byte
-                    *(fbp + location) = arraypixel[2][y - vinfo.yres/2 + pixelrow/2][x - vinfo.xres/2 + pixelcol/2];        // Some blue
-                    *(fbp + location + 1) = arraypixel[1][y - vinfo.yres/2 + pixelrow/2][x - vinfo.xres/2 + pixelcol/2];     // A little green
-                    *(fbp + location + 2) = arraypixel[0][y - vinfo.yres/2 + pixelrow/2][x - vinfo.xres/2 + pixelcol/2];    // A lot of red
+                    *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];        // Some blue
+                    *(fbp + location + 1) = greenPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];     // A little green
+                    *(fbp + location + 2) = redPixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];    // A lot of red
                     *(fbp + location + 3) = 0;      // No transparency
             //location += 4;
             } else  { //assume 16bpp
