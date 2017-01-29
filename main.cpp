@@ -7,6 +7,8 @@
 #include <linux/fb.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <cstdio>
+#include <termios.h>
 
 using namespace std;
 
@@ -124,6 +126,27 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
             drawWhitePoint(x, y);
         }
     }
+}
+
+int detectKeyStroke() {
+    static bool flag = false;
+    static const int STDIN = 0;
+
+    if (!flag) {
+        //Memakai termios untuk mematikan line buffering
+        struct termios T;
+
+        tcgetattr(STDIN, &T);
+        T.c_lflag &= ~ICANON;
+        tcsetattr(STDIN, TCSANOW, &T);
+        setbuf(stdin, NULL);
+        flag = true;
+    }
+
+    int NByte;
+    ioctl(STDIN, FIONREAD, &NByte);  // STDIN = 0
+    
+    return NByte;
 }
 
 int main() {
