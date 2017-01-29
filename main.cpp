@@ -216,7 +216,42 @@ int main() {
     drawWhiteLine(300, 0, 0, 0);
 
     eraseWithBlackBox(0,0,100,100);
+    //pusat lingkaran
+    int xp = 150;
+    int yp = 275;
+    char KeyPressed;
 
+    do {
+        while (!detectKeyStroke()) {
+            //do nothing
+        }
+        KeyPressed = getchar();
+        switch (KeyPressed) {
+            case 'D': {
+                drawCircle(yp,xp,25);
+                drawWhiteLine(yp,xp+25,yp-25,xp+50);
+                drawWhiteLine(yp-25,xp,yp-50,xp+25);
+                drawWhiteLine(yp-25,xp+50,yp-50,xp+25);            
+                break;
+            }
+            case 'S': {
+                drawCircle(yp,xp,25);
+                drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
+                drawWhiteLine(yp-15,xp-20,yp-50,xp-20);
+                drawWhiteLine(yp-50,xp+20,yp-50,xp-20);
+                break;
+            }
+            case 'A': {
+                drawCircle(yp,xp,25);
+                drawWhiteLine(yp,xp-25,yp-25,xp-50);
+                drawWhiteLine(yp-25,xp,yp-50,xp-25);
+                drawWhiteLine(yp-25,xp-50,yp-50,xp-25);
+                break;
+            } 
+        }
+    } while (KeyPressed!='C');
+
+    
     // Open the file for reading and writing framebuffer
     fbfd = open("/dev/fb0", O_RDWR);
     if (fbfd == -1) {
