@@ -80,6 +80,47 @@ void drawCircle(int x0, int y0, int radius)
     }
 }
 
+void drawWholeCircle(int x0, int y0, int radius)
+{
+    int x = radius;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y)
+    {
+        drawWhitePoint(x0 - x, y0 + y);
+        drawWhitePoint(x0 - y, y0 + x); 
+        drawWhitePoint(x0 - y, y0 - x);
+        drawWhitePoint(x0 - x, y0 - y);
+        drawWhitePoint(x0 + x, y0 + y);
+        drawWhitePoint(x0 + y, y0 + x); 
+        drawWhitePoint(x0 + y, y0 - x);
+        drawWhitePoint(x0 + x, y0 - y);
+
+        if (err <= 0)
+        {
+            y += 1;
+            err += 2*y + 1;
+        }
+        if (err > 0)
+        {
+            x -= 1;
+            err -= 2*x + 1;
+        }
+    }
+}
+
+void eraseWithBlackBox(int x1, int y1, int x2, int y2) {
+    int x,y;
+    for (x=x1; x<=x2; x++) {
+        for (y=y1; y<=y2; y++) {
+            redPixelMatrix[x][y] = 0;
+            greenPixelMatrix[x][y] = 0;
+            bluePixelMatrix[x][y] = 0;
+        }
+    }    
+}
+
 void drawWhiteLine(int x1, int y1, int x2, int y2) {
 	//Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
     int deltaX = x2 - x1;
@@ -173,6 +214,8 @@ int main() {
     drawWhiteLine(0, 400, 300, 400);
     drawWhiteLine(300, 400, 300, 0);
     drawWhiteLine(300, 0, 0, 0);
+
+    eraseWithBlackBox(0,0,100,100);
 
     // Open the file for reading and writing framebuffer
     fbfd = open("/dev/fb0", O_RDWR);
