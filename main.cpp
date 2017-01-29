@@ -85,7 +85,7 @@ void drawWhitePoint(int x1, int y1) {
     bluePixelMatrix[x1][y1] = 255;
 }
 
-void drawCircle(int x0, int y0, int radius)
+void drawSemiCircle(int x0, int y0, int radius)
 {
     int x = radius;
     int y = 0;
@@ -109,6 +109,47 @@ void drawCircle(int x0, int y0, int radius)
             err -= 2*x + 1;
         }
     }
+}
+
+void drawCircle(int x0, int y0, int radius)
+{
+    int x = radius;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y)
+    {
+        drawWhitePoint(x0 - x, y0 + y);
+        drawWhitePoint(x0 - y, y0 + x); 
+        drawWhitePoint(x0 - y, y0 - x);
+        drawWhitePoint(x0 - x, y0 - y);
+        drawWhitePoint(x0 + x, y0 + y);
+        drawWhitePoint(x0 + y, y0 + x); 
+        drawWhitePoint(x0 + y, y0 - x);
+        drawWhitePoint(x0 + x, y0 - y);
+
+        if (err <= 0)
+        {
+            y += 1;
+            err += 2*y + 1;
+        }
+        if (err > 0)
+        {
+            x -= 1;
+            err -= 2*x + 1;
+        }
+    }
+}
+
+void eraseWithBlackBox(int x1, int y1, int x2, int y2) {
+    int x,y;
+    for (x=x1; x<=x2; x++) {
+        for (y=y1; y<=y2; y++) {
+            redPixelMatrix[x][y] = 0;
+            greenPixelMatrix[x][y] = 0;
+            bluePixelMatrix[x][y] = 0;
+        }
+    }    
 }
 
 void drawWhiteLine(int x1, int y1, int x2, int y2) {
@@ -189,13 +230,15 @@ int main() {
     drawWhiteLine(70, 180, 70, 270);
 
     //Gambar circle
-    drawCircle(50, 225, 25);    
+    drawSemiCircle(50, 225, 25);    
 
     //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
     drawWhiteLine(0, 0, 0, 400);
     drawWhiteLine(0, 400, 300, 400);
     drawWhiteLine(300, 400, 300, 0);
     drawWhiteLine(300, 0, 0, 0);
+
+    eraseWithBlackBox(0,0,100,100);
 
     // Open the file for reading and writing framebuffer
     fbfd = open("/dev/fb0", O_RDWR);
