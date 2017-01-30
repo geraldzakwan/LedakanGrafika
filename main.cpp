@@ -266,6 +266,7 @@ int detectKeyStroke() {
 void drawShooter(int xp, int yp, char mode) {
     switch (mode) {
         case 'D': {
+            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp+25,yp-25,xp+50);
             drawWhiteLine(yp-25,xp,yp-50,xp+25);
@@ -273,6 +274,7 @@ void drawShooter(int xp, int yp, char mode) {
             break;
         }
         case 'S': {
+            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
             drawWhiteLine(yp-15,xp-20,yp-50,xp-20);
@@ -280,6 +282,7 @@ void drawShooter(int xp, int yp, char mode) {
             break;
         }
         case 'A': {
+            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp-25,yp-25,xp-50);
             drawWhiteLine(yp-25,xp,yp-50,xp-25);
@@ -401,16 +404,24 @@ int main() {
 
     printf("masuk erase black box\n");
     int xp = 150;
-    int yp = 275;
+    int yp = 274;
     char KeyPressed;
 
     //gambar meledak
     drawExplosion(70,100);
 
-    DrawToScreen();
-
+    DrawToScreen();  
+    do {
+        while (!detectKeyStroke()) {
+            //do nothing
+        }
+        KeyPressed = getchar();
+        drawShooter(xp,yp,KeyPressed);
+        DrawToScreen();
+    } while (KeyPressed!='C');
 
     munmap(fbp, screensize);
-    close(fbfd);  
+    close(fbfd);
+    
     return 0;
 }
