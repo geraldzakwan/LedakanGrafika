@@ -57,6 +57,28 @@ void drawWhitePoint(int x1, int y1) {
     bluePixelMatrix[x1][y1] = 255;
 }
 
+void drawRedPoint(int x1,int y1){
+    redPixelMatrix[x1][y1] = 255;
+    greenPixelMatrix[x1][y1] = 0;
+    bluePixelMatrix[x1][y1] = 0;   
+}
+
+
+void floodFill(int x,int y,int redBatas,int greenBatas,int blueBatas,int redColor,int greenColor,int blueColor){
+    if((x>=0 && x<HEIGHT) && (y>=0 && y<WIDTH)){
+        if(!((redPixelMatrix[x][y]==redBatas && greenPixelMatrix[x][y]==greenBatas && bluePixelMatrix[x][y]==blueBatas) || 
+            (redPixelMatrix[x][y]==redColor && greenPixelMatrix[x][y]==greenColor && bluePixelMatrix[x][y]==blueColor))){
+            redPixelMatrix[x][y] = redColor;
+            greenPixelMatrix[x][y] = greenColor;
+            bluePixelMatrix[x][y] = blueColor;
+            floodFill(x,y+1,redBatas,greenBatas,blueBatas,redColor,greenColor,blueColor);
+            floodFill(x+1,y,redBatas,greenBatas,blueBatas,redColor,greenColor,blueColor);
+            floodFill(x,y-1,redBatas,greenBatas,blueBatas,redColor,greenColor,blueColor);
+            floodFill(x-1,y,redBatas,greenBatas,blueBatas,redColor,greenColor,blueColor);
+        }
+    }
+}
+
 void drawSemiCircle(int x0, int y0, int radius)
 {
     int x = radius;
@@ -172,6 +194,54 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
     }
 }
 
+void drawRedLine(int x1, int y1, int x2, int y2) {
+    //Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
+    int deltaX = x2 - x1;
+    int deltaY = y2 - y1;
+    int ix = deltaX > 0 ? 1 : -1;
+    int iy = deltaY > 0 ? 1 : -1;
+    deltaX = abs(deltaX);
+    deltaY = abs(deltaY);
+
+    int x = x1;
+    int y = y1;
+
+    drawRedPoint(x,y);
+
+    if (deltaX >= deltaY) {
+        int error = 2 * deltaY - deltaX;
+
+        while (x != x2) {
+            if ((error >= 0) && (error || (ix > 0)))
+            {
+                error -= deltaX;
+                y += iy;
+            }
+ 
+            error += deltaY;
+            x += ix;
+ 
+            drawRedPoint(x, y);
+        }
+    } else {
+        int error = 2 * deltaX - deltaY;
+
+        while (y != y2)
+        {
+            if ((error >= 0) && (error || (iy > 0)))
+            {
+                error -= deltaY;
+                x += ix;
+            }
+ 
+            error += deltaX;
+            y += iy;
+ 
+            drawRedPoint(x, y);
+        }
+    }
+}
+
 int detectKeyStroke() {
     static bool flag = false;
     static const int STDIN = 0;
@@ -219,6 +289,34 @@ void DrawToScreen(){
         }
     printf("after loop\n");    
 }
+
+void drawExplosion(int x,int y){
+    //x = 70
+    // bentuk bintang ada 8 garis sesuai dengan parameter titik pusat (x,y)
+    int pointx1 = x-20, pointy1 =y+20;
+    int pointx3 = x+30, pointy3 =y+30;
+    int pointx5 = x+20, pointy5 =y-20;
+    int pointx7 = x-30, pointy7 =y-30;
+
+    int pointx2 = x, pointy2 = y+15;
+    int pointx4 = x+10, pointy4 = y;
+    int pointx6 = x, pointy6 = y-10;
+    int pointx8 = x-15, pointy8 = y;
+
+    //gambar ledakan
+    drawRedLine(pointx1,pointy1,pointx2,pointy2);
+    drawRedLine(pointx2,pointy2,pointx3,pointy3);
+    drawRedLine(pointx3,pointy3,pointx4,pointy4);
+    drawRedLine(pointx4,pointy4,pointx5,pointy5);
+    drawRedLine(pointx5,pointy5,pointx6,pointy6);
+    drawRedLine(pointx6,pointy6,pointx7,pointy7);
+    drawRedLine(pointx7,pointy7,pointx8,pointy8);
+    drawRedLine(pointx8,pointy8,pointx1,pointy1);
+    
+    //warnain 
+    floodFill(x,y,255,0,0,255,255,0);
+}
+
 
 int main() {
     //printf("masuk\n");
@@ -280,6 +378,10 @@ int main() {
     int xp = 150;
     int yp = 275;
     char KeyPressed;
+
+    //gambar meledak
+    drawExplosion(70,100);
+
     DrawToScreen();
 
 
