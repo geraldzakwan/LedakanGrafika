@@ -13,8 +13,8 @@
 
 using namespace std;
 
-#define HEIGHT 800
-#define WIDTH 600
+#define HEIGHT 850
+#define WIDTH 650
 
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
@@ -285,8 +285,11 @@ void drawShooter(int xp, int yp, char mode) {
             drawWhiteLine(yp-25,xp+50,yp-50,xp+25);            
             break;
         }
+            
         case 's':
         case 'S': {
+            posX = xp-45;
+            posY = yp+50;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
@@ -294,8 +297,12 @@ void drawShooter(int xp, int yp, char mode) {
             drawWhiteLine(yp-50,xp+20,yp-50,xp-20);
             break;
         }
+                    
+
         case 'a':
         case 'A': {
+            posX = xp-50;
+            posY = yp-50;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp-25,yp-25,xp-50);
@@ -403,6 +410,13 @@ void drawUFO() {
     
 }
 
+void drawFrame() {
+    drawWhiteLine(0, 0, 0, 800);
+    drawWhiteLine(0, 800, 600, 800);
+    drawWhiteLine(600, 800, 600, 0);
+    drawWhiteLine(600, 0, 0, 0);
+}
+
 int main() {
     //printf("masuk\n");
     clearMatrix();
@@ -444,10 +458,6 @@ int main() {
     drawUFO();
 
     //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
-    drawWhiteLine(0, 0, 0, 400);
-    drawWhiteLine(0, 400, 300, 400);
-    drawWhiteLine(300, 400, 300, 0);
-    drawWhiteLine(300, 0, 0, 0);
     printf("masuk gambar arena\n");
 
     printf("masuk erase black box\n");
@@ -461,7 +471,7 @@ int main() {
     DrawToScreen();  
     do {
         clearMatrix();
-
+        drawFrame();
         // draw shooter
         while (!detectKeyStroke()) {
             //do nothing
@@ -479,7 +489,8 @@ int main() {
         }
 
         DrawToScreen();
-        drawBullet();
+        if (KeyPressed=='A')
+            drawBullet(posX,posY,0,0,6);
     } while (KeyPressed!='C');
 
     munmap(fbp, screensize);
