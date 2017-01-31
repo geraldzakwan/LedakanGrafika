@@ -23,6 +23,8 @@ int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
 
+bool exploded;
+
 void clearMatrix() {
     for (int i = 0; i < WIDTH; ++i)
     {
@@ -266,7 +268,7 @@ int detectKeyStroke() {
 void drawShooter(int xp, int yp, char mode) {
     switch (mode) {
         case 'D': {
-            eraseWithBlackBox(100,100,299,299);
+            // eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp+25,yp-25,xp+50);
             drawWhiteLine(yp-25,xp,yp-50,xp+25);
@@ -274,7 +276,7 @@ void drawShooter(int xp, int yp, char mode) {
             break;
         }
         case 'S': {
-            eraseWithBlackBox(100,100,299,299);
+            // eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
             drawWhiteLine(yp-15,xp-20,yp-50,xp-20);
@@ -282,7 +284,7 @@ void drawShooter(int xp, int yp, char mode) {
             break;
         }
         case 'A': {
-            eraseWithBlackBox(100,100,299,299);
+            // eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp-25,yp-25,xp-50);
             drawWhiteLine(yp-25,xp,yp-50,xp-25);
@@ -406,24 +408,34 @@ int main() {
     int xp = 150;
     int yp = 274;
     char KeyPressed;
+
+    //gambar meledak
+    drawExplosion(70,100);
+
     DrawToScreen();  
     do {
+        clearMatrix();
+
+        // draw shooter
         while (!detectKeyStroke()) {
             //do nothing
         }
         KeyPressed = getchar();
         drawShooter(xp,yp,KeyPressed);
+
+        // draw UFO
+
+        // draw bullet
+
+        if (exploded) {
+            // draw explosion
+        }
+
         DrawToScreen();
     } while (KeyPressed!='C');
-    
-
-    //gambar meledak
-    drawExplosion(70,100);
-
-    DrawToScreen();
-
 
     munmap(fbp, screensize);
-    close(fbfd);  
+    close(fbfd);
+    
     return 0;
 }
