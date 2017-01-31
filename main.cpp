@@ -479,7 +479,7 @@ int main() {
         }
 
         DrawToScreen();
-        drawBullet();
+        //drawBullet();
     } while (KeyPressed!='C');
 
     munmap(fbp, screensize);
