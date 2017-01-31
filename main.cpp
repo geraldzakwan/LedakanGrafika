@@ -151,8 +151,10 @@ void eraseWithBlackBox(int x1, int y1, int x2, int y2) {
     }    
 }
 
-void drawWhiteLine(int x1, int y1, int x2, int y2) {
+bool drawWhiteLine(int x1, int y1, int x2, int y2) {
 	//Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
+    bool ret = false;
+
     int deltaX = x2 - x1;
     int deltaY = y2 - y1;
     int ix = deltaX > 0 ? 1 : -1;
@@ -179,6 +181,9 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
             x += ix;
  
             drawWhitePoint(x, y);
+            if (redPixelMatrix[x][y] == 255 && greenPixelMatrix[x][y] == 255 && bluePixelMatrix[x][y] == 255) {
+                ret = true;
+            }
         }
     } else {
         int error = 2 * deltaX - deltaY;
@@ -195,8 +200,12 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
             y += iy;
  
             drawWhitePoint(x, y);
+            if (redPixelMatrix[x][y] == 255 && greenPixelMatrix[x][y] == 255 && bluePixelMatrix[x][y] == 255) {
+                ret = true;
+            }
         }
     }
+    return ret;
 }
 
 void drawRedLine(int x1, int y1, int x2, int y2) {
