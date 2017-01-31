@@ -159,7 +159,7 @@ void drawBullets() {
 			bullets[i].xEnd = bullets[i].xStart + (bullets[i].x2 - bullets[i].x1) * (bullets[i].iteration - 1) / bullets[i].partisi;
 			bullets[i].yEnd = (int) floor(bullets[i].m * bullets[i].xEnd + bullets[i].c + 0.5);
 			bullets[i].iteration++;
-    	}	
+    	}
     }
 }
 
