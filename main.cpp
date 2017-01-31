@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <cstdio>
 #include <termios.h>
+#include <math.h>
 
 using namespace std;
 
@@ -22,6 +23,8 @@ char *fbp = 0;
 int redPixelMatrix[WIDTH][HEIGHT];
 int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
+int posX;
+int posY;
 
 bool exploded;
 
@@ -245,6 +248,8 @@ void drawRedLine(int x1, int y1, int x2, int y2) {
 }
 
 int detectKeyStroke() {
+    //deteksi adanya keyboard yang ditekan.
+    //0 jika tidak, >=1 jika iya
     static bool flag = false;
     static const int STDIN = 0;
 
@@ -266,25 +271,32 @@ int detectKeyStroke() {
 }
 
 void drawShooter(int xp, int yp, char mode) {
+    //gambar tembakan dengan titik pusat lingkaran tembakan 
+    //(xp,yp)
     switch (mode) {
+        case'd':
         case 'D': {
-            // eraseWithBlackBox(100,100,299,299);
+            posX = xp-50;
+            posY = yp+50;
+            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp+25,yp-25,xp+50);
             drawWhiteLine(yp-25,xp,yp-50,xp+25);
             drawWhiteLine(yp-25,xp+50,yp-50,xp+25);            
             break;
         }
+        case 's':
         case 'S': {
-            // eraseWithBlackBox(100,100,299,299);
+            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
             drawWhiteLine(yp-15,xp-20,yp-50,xp-20);
             drawWhiteLine(yp-50,xp+20,yp-50,xp-20);
             break;
         }
+        case 'a':
         case 'A': {
-            // eraseWithBlackBox(100,100,299,299);
+            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp-25,yp-25,xp-50);
             drawWhiteLine(yp-25,xp,yp-50,xp-25);
@@ -348,6 +360,48 @@ void drawExplosion(int x,int y){
     floodFill(x,y,255,0,0,255,255,0);
 }
 
+void drawBullet(int x1, int y1, int x2, int y2 , int n)
+//x1,y1 titik asal peluru
+//x2,y2 titik sampai peluru
+//n adalah pembagian tahap gerak peluru
+{
+    //persamaan garis
+    float m = (y2-y1);
+    m /= (x2-x1);
+    float c = y1 - m*x1;
+
+    int partisi = 0;
+    for (int i=1;i<=n;i++) {
+        partisi += i;
+    }
+
+
+    int xStart = x1;
+    int yStart = (int) floor(m*xStart+c+0.5);
+    int xEnd = x1+(x2-x1)*n/partisi;
+    int yEnd = (int) floor(m*xEnd+c+0.5);
+    for (int i=n;i>0;i--) {
+        drawWhiteLine(xStart,yStart,xEnd,yEnd);
+        DrawToScreen();
+        usleep(3000000*i/partisi);
+        eraseWithBlackBox(xEnd,yEnd,xStart,yStart);
+        xStart = xEnd;
+        yStart = yEnd;
+        xEnd = xStart+(x2-x1)*(i-1)/partisi;
+        yEnd = (int) floor(m*xEnd+c+0.5);
+    }
+}
+
+void drawUFO() {
+    drawWhiteLine(50, 250, 70, 270);
+    drawWhiteLine(50, 250, 50, 200);
+    drawWhiteLine(50, 200, 70, 180);
+    drawWhiteLine(70, 180, 70, 270);
+    
+    //Gambar circle
+    drawSemiCircle(50, 225, 25);    
+    
+}
 
 int main() {
     //printf("masuk\n");
@@ -387,15 +441,7 @@ int main() {
     //display merge center
     // Menulis ke layar tengah file
     //Gambar trapesium
-    drawWhiteLine(50, 250, 70, 270);
-    drawWhiteLine(50, 250, 50, 200);
-    drawWhiteLine(50, 200, 70, 180);
-    drawWhiteLine(70, 180, 70, 270);
-    printf("masuk gambar trapesium\n");
-
-    //Gambar circle
-    drawSemiCircle(50, 225, 25);    
-    printf("masuk gambar semicircle\n");
+    drawUFO();
 
     //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
     drawWhiteLine(0, 0, 0, 400);
@@ -424,14 +470,16 @@ int main() {
         drawShooter(xp,yp,KeyPressed);
 
         // draw UFO
-
+        drawUFO();
         // draw bullet
 
+        drawExplosion(100,100);
         if (exploded) {
             // draw explosion
         }
 
         DrawToScreen();
+        drawBullet();
     } while (KeyPressed!='C');
 
     munmap(fbp, screensize);
