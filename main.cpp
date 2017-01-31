@@ -48,9 +48,9 @@ struct bullet
 vector<bullet> bullets;
 
 void clearMatrix() {
-    for (int i = 0; i < WIDTH; ++i)
+    for (int i = 0; i < 600; ++i)
     {
-        for (int j = 0; j < HEIGHT; ++j)
+        for (int j = 0; j < 1200; ++j)
         {
             redPixelMatrix[i][j] = 0;
             greenPixelMatrix[i][j] = 0;
@@ -58,22 +58,6 @@ void clearMatrix() {
         }
     }
 }
-
-void printMatrix() { // print ke stdio
-    for (int i = 0; i < WIDTH; ++i)
-    {
-        for (int j = 0; j < HEIGHT; ++j)
-        {
-            if (bluePixelMatrix[i][j] != 0) {
-                cout << 0;
-            } else {
-                cout << '-';
-            }
-        }
-        cout << endl;
-    }
-}
-
 
 void drawWhitePoint(int x1, int y1) {
     redPixelMatrix[x1][y1] = 255;
@@ -89,7 +73,7 @@ void drawRedPoint(int x1,int y1){
 
 
 void floodFill(int x,int y,int redBatas,int greenBatas,int blueBatas,int redColor,int greenColor,int blueColor){
-    if((x>=0 && x<HEIGHT) && (y>=0 && y<WIDTH)){
+    if((x>=0 && x<WIDTH) && (y>=0 && y<HEIGHT)){
         if(!((redPixelMatrix[x][y]==redBatas && greenPixelMatrix[x][y]==greenBatas && bluePixelMatrix[x][y]==blueBatas) || 
             (redPixelMatrix[x][y]==redColor && greenPixelMatrix[x][y]==greenColor && bluePixelMatrix[x][y]==blueColor))){
             redPixelMatrix[x][y] = redColor;
@@ -127,6 +111,9 @@ void drawSemiCircle(int x0, int y0, int radius)
             err -= 2*x + 1;
         }
     }
+
+    //warnain 
+    floodFill(x0-5,y0,255,255,255,255,255,0);
 }
 
 void drawCircle(int x0, int y0, int radius)
@@ -157,17 +144,6 @@ void drawCircle(int x0, int y0, int radius)
             err -= 2*x + 1;
         }
     }
-}
-
-void eraseWithBlackBox(int x1, int y1, int x2, int y2) {
-    int x,y;
-    for (x=x1; x<=x2; x++) {
-        for (y=y1; y<=y2; y++) {
-            redPixelMatrix[x][y] = 0;
-            greenPixelMatrix[x][y] = 0;
-            bluePixelMatrix[x][y] = 0;
-        }
-    }    
 }
 
 bool drawWhiteLine(int x1, int y1, int x2, int y2) {
@@ -308,11 +284,12 @@ void drawShooter(int xp, int yp, char mode) {
         case 'D': {
             posX = xp+50;
             posY = yp-50;
-            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
+            floodFill(yp, xp, 255, 255, 255, 255, 0, 0);
             drawWhiteLine(yp,xp+25,yp-25,xp+50);
             drawWhiteLine(yp-25,xp,yp-50,xp+25);
             drawWhiteLine(yp-25,xp+50,yp-50,xp+25);            
+            floodFill(yp-30, xp+10, 255, 255, 255, 0, 0, 255);
             break;
         }
             
@@ -320,11 +297,12 @@ void drawShooter(int xp, int yp, char mode) {
         case 'S': {
             posX = xp;
             posY = 500;
-            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
+            floodFill(yp, xp, 255, 255, 255, 255, 0, 0);
             drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
             drawWhiteLine(yp-15,xp-20,yp-50,xp-20);
             drawWhiteLine(yp-50,xp+20,yp-50,xp-20);
+            floodFill(yp-30, xp+10, 255, 255, 255, 0, 0, 255);
             break;
         }
                     
@@ -333,11 +311,12 @@ void drawShooter(int xp, int yp, char mode) {
         case 'A': {
             posX = xp-50;
             posY = yp-50;
-            eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
+            floodFill(yp, xp, 255, 255, 255, 255, 0, 0);
             drawWhiteLine(yp,xp-25,yp-25,xp-50);
             drawWhiteLine(yp-25,xp,yp-50,xp-25);
             drawWhiteLine(yp-25,xp-50,yp-50,xp-25);
+            floodFill(yp-25, xp-40, 255, 255, 255, 0, 0, 255);
             break;
         } 
         default: {}
@@ -401,16 +380,27 @@ void drawUFO(int x1, int y1) {
     drawWhiteLine(x1, y1, x1, y1-50);
     drawWhiteLine(x1, y1-50, x1+20, y1-70);
     drawWhiteLine(x1+20, y1-70, x1+20, y1+20);
-    /*
-    drawWhiteLine(50, 700, 70, 720);
-    drawWhiteLine(50, 700, 50, 650);
-    drawWhiteLine(50, 650, 70, 630);
-    drawWhiteLine(70, 630, 70, 720);
+
+    floodFill(x1+5, y1, 255, 255, 255, 0, 255, 0);
     
-    //Gambar circle
-    drawSemiCircle(50, 225, 25);    
-    */
     drawSemiCircle(x1, y1-25, 25);    
+}
+
+void drawStars() {
+    drawExplosion(400, 100);
+    drawExplosion(300, 200);
+    drawExplosion(500, 200);
+    drawExplosion(400, 300);
+    drawExplosion(300, 400);
+    drawExplosion(500, 400);
+    drawExplosion(400, 500);
+    drawExplosion(400, 700);
+    drawExplosion(300, 800);
+    drawExplosion(500, 800);
+    drawExplosion(400, 900);
+    drawExplosion(300, 1000);
+    drawExplosion(500, 1000);
+    drawExplosion(400, 1100);
 }
 
 void drawFrame() {
@@ -455,7 +445,6 @@ void drawKeyShooter(){
         if(!detectKeyStroke()) {
                 char KeyPressed = getchar();
                 if ((KeyPressed=='A')||(KeyPressed=='a') ||(KeyPressed=='S') ||(KeyPressed=='s') ||(KeyPressed=='D') ||(KeyPressed=='d')) {
-                    //drawShooter(xp,yp,KeyPressed);
                     lastCorrectState = KeyPressed;
                 } else if (KeyPressed==' ') {
 
@@ -533,6 +522,7 @@ int main() {
         drawFrame();
         
         drawShooter(xp,yp,lastCorrectState);
+        drawStars();
 
         // draw UFO
         drawUFO(xawal, yawal);
@@ -542,9 +532,9 @@ int main() {
             left = true;
         }
         if (left) {
-            yawal -= 5;
+            yawal -= 10;
         } else {
-            yawal += 5;     
+            yawal += 10;     
         }
         
         // draw bullet
@@ -557,8 +547,8 @@ int main() {
     clearMatrix();
     drawFrame();
     drawShooter(xp,yp,lastCorrectState);
+    drawStars();
     drawExplosion(xawal,yawal);
-    //floodFill(xawal,yawal,255,0,0,255,255,0);
     DrawToScreen();
     
     
