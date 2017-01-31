@@ -28,7 +28,7 @@ int bluePixelMatrix[WIDTH][HEIGHT];
 int posX;
 int posY;
 int lastCorrectState = 's';
-bool exploded;
+bool exploded = false;
 
 struct bullet
 {
@@ -199,10 +199,11 @@ bool drawWhiteLine(int x1, int y1, int x2, int y2) {
             error += deltaY;
             x += ix;
  
-            drawWhitePoint(x, y);
+            
             if (redPixelMatrix[x][y] == 255 && greenPixelMatrix[x][y] == 255 && bluePixelMatrix[x][y] == 255) {
                 ret = true;
             }
+            drawWhitePoint(x, y);
         }
     } else {
         int error = 2 * deltaX - deltaY;
@@ -218,10 +219,11 @@ bool drawWhiteLine(int x1, int y1, int x2, int y2) {
             error += deltaX;
             y += iy;
  
-            drawWhitePoint(x, y);
+            
             if (redPixelMatrix[x][y] == 255 && greenPixelMatrix[x][y] == 255 && bluePixelMatrix[x][y] == 255) {
                 ret = true;
             }
+            drawWhitePoint(x, y);
         }
     }
     return ret;
@@ -449,23 +451,23 @@ void addBullet(int x1, int y1, int x2, int y2 , int n)
 }
 
 void drawKeyShooter(){
-    while(true) {
-        while (!detectKeyStroke()) {
-            char KeyPressed = getchar();
-            if ((KeyPressed=='A')||(KeyPressed=='a') ||(KeyPressed=='S') ||(KeyPressed=='s') ||(KeyPressed=='D') ||(KeyPressed=='d')) {
-                //drawShooter(xp,yp,KeyPressed);
-                lastCorrectState = KeyPressed;
-            } else if (KeyPressed==' ') {
+    while(!exploded){
+        if(!detectKeyStroke()) {
+                char KeyPressed = getchar();
+                if ((KeyPressed=='A')||(KeyPressed=='a') ||(KeyPressed=='S') ||(KeyPressed=='s') ||(KeyPressed=='D') ||(KeyPressed=='d')) {
+                    //drawShooter(xp,yp,KeyPressed);
+                    lastCorrectState = KeyPressed;
+                } else if (KeyPressed==' ') {
 
-                if (lastCorrectState == 'a')
-                    addBullet(posY,posX,0,0,20);
-                else if (lastCorrectState == 's')
-                    addBullet(posY,posX,0,600,20);
-                else if (lastCorrectState == 'd')
-                    addBullet(posY,posX,0,1200,20);
+                    if (lastCorrectState == 'a')
+                        addBullet(posY,posX,0,0,20);
+                    else if (lastCorrectState == 's')
+                        addBullet(posY,posX,0,600,20);
+                    else if (lastCorrectState == 'd')
+                        addBullet(posY,posX,0,1200,20);
+                
             }
         }
-        
     }
         
 }
@@ -514,7 +516,7 @@ int main() {
 
     // Map the device to memory
     fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
-    //printf("The framebuffer device was mapped to memory successfully.\n");
+
     //display merge center
     // Menulis ke layar tengah file
     //Gambar trapesium
@@ -551,16 +553,15 @@ int main() {
         DrawToScreen(); 
         usleep(50000);
     } while (KeyPressed!='C' && !exploded);
-    
+    thread1.detach();
     clearMatrix();
     drawFrame();
     drawShooter(xp,yp,lastCorrectState);
-    if (exploded) {
-        drawExplosion(100,100);
-    }
+    drawExplosion(xawal,yawal);
+    //floodFill(xawal,yawal,255,0,0,255,255,0);
     DrawToScreen();
-    usleep(50000);
-
+    
+    
     munmap(fbp, screensize);
     close(fbfd);
     
