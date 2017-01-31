@@ -399,15 +399,21 @@ void drawBullet(int x1, int y1, int x2, int y2 , int n)
     }
 }
 
-void drawUFO() {
-    drawWhiteLine(50, 250, 70, 270);
-    drawWhiteLine(50, 250, 50, 200);
-    drawWhiteLine(50, 200, 70, 180);
-    drawWhiteLine(70, 180, 70, 270);
+void drawUFO(int x1, int y1) {
+    drawWhiteLine(x1, y1, x1+20, y1+20);
+    drawWhiteLine(x1, y1, x1, y1-50);
+    drawWhiteLine(x1, y1-50, x1+20, y1-70);
+    drawWhiteLine(x1+20, y1-70, x1+20, y1+20);
+    /*
+    drawWhiteLine(50, 700, 70, 720);
+    drawWhiteLine(50, 700, 50, 650);
+    drawWhiteLine(50, 650, 70, 630);
+    drawWhiteLine(70, 630, 70, 720);
     
     //Gambar circle
     drawSemiCircle(50, 225, 25);    
-    
+    */
+    drawSemiCircle(x1, y1-25, 25);    
 }
 
 void drawFrame() {
@@ -455,7 +461,6 @@ int main() {
     //display merge center
     // Menulis ke layar tengah file
     //Gambar trapesium
-    drawUFO();
 
     //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
     printf("masuk gambar arena\n");
@@ -465,6 +470,8 @@ int main() {
     int yp = 274;
     char KeyPressed;
 
+    int xawal = 50, yawal = 780;
+    bool left = true;
     //gambar meledak
     drawExplosion(70,100);
 
@@ -480,7 +487,18 @@ int main() {
         drawShooter(xp,yp,KeyPressed);
 
         // draw UFO
-        drawUFO();
+        drawUFO(xawal, yawal);
+        if(yawal-70<=0) {
+            left = false;
+        } else if(yawal+20>=800) {
+            left = true;
+        }
+        if (left) {
+            yawal -= 5;
+        } else {
+            yawal += 5;     
+        }
+        
         // draw bullet
 
         drawExplosion(100,100);
@@ -492,6 +510,7 @@ int main() {
         if (KeyPressed=='A') {
             drawBullet(posX,posY,0,0,6);
         }
+
     } while (KeyPressed!='C');
 
     munmap(fbp, screensize);
