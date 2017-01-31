@@ -475,7 +475,7 @@ void drawBullets() {
     for (int i = bullets.size()-1; i >=0; --i)
     {
         if (bullets[i].iteration >0) {
-            drawWhiteLine(bullets[i].xStart,bullets[i].yStart,bullets[i].xEnd,bullets[i].yEnd);
+            if (drawWhiteLine(bullets[i].xStart,bullets[i].yStart,bullets[i].xEnd,bullets[i].yEnd)) exploded = true;
             bullets[i].xStart = bullets[i].xEnd;
             bullets[i].yStart = bullets[i].yEnd;
             bullets[i].xEnd = bullets[i].xStart + (bullets[i].x2 - bullets[i].x1) * (bullets[i].iteration - 1) / bullets[i].partisi;
@@ -490,7 +490,7 @@ int main() {
     
     int fbfd = 0;
     long int screensize = 0;
-   
+    exploded = false;
     
     fbfd = open("/dev/fb0", O_RDWR);
     if (fbfd == -1) {
@@ -546,14 +546,21 @@ int main() {
         }
         
         // draw bullet
-        drawBullets();        
+        drawBullets(); 
 
         DrawToScreen(); 
         usleep(50000);
-    } while (KeyPressed!='C');
+    } while (KeyPressed!='C' && !exploded);
+    
+    clearMatrix();
+    drawFrame();
+    drawShooter(xp,yp,lastCorrectState);
     if (exploded) {
-            drawExplosion(100,100);
-        }
+        drawExplosion(100,100);
+    }
+    DrawToScreen();
+    usleep(50000);
+
     munmap(fbp, screensize);
     close(fbfd);
     

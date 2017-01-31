@@ -153,13 +153,45 @@ void drawBullets() {
     for (int i = 0; i < bullets.size(); ++i)
     {
     	if (bullets[i].iteration <= bullets[i].n) {
-    		drawWhiteLine(bullets[i].xStart,bullets[i].yStart,bullets[i].xEnd,bullets[i].yEnd);
+    		if (drawWhiteLine(bullets[i].xStart,bullets[i].yStart,bullets[i].xEnd,bullets[i].yEnd)) exploded = true;
 			bullets[i].xStart = bullets[i].xEnd;
 			bullets[i].yStart = bullets[i].yEnd;
 			bullets[i].xEnd = bullets[i].xStart + (bullets[i].x2 - bullets[i].x1) * (bullets[i].iteration - 1) / bullets[i].partisi;
 			bullets[i].yEnd = (int) floor(bullets[i].m * bullets[i].xEnd + bullets[i].c + 0.5);
 			bullets[i].iteration++;
     	}
+    }
+}
+
+void drawBullet(int x1, int y1, int x2, int y2 , int n)
+//x1,y1 titik asal peluru
+//x2,y2 titik sampai peluru
+//n adalah pembagian tahap gerak peluru
+{
+    //persamaan garis
+    float m = (y2-y1);
+    m /= (x2-x1);
+    float c = y1 - m*x1;
+
+    int partisi = 0;
+    for (int i=1;i<=n;i++) {
+        partisi += i;
+    }
+
+
+    int xStart = x1;
+    int yStart = (int) floor(m*xStart+c+0.5);
+    int xEnd = x1+(x2-x1)*n/partisi;
+    int yEnd = (int) floor(m*xEnd+c+0.5);
+    for (int i=n;i>0;i--) {
+        drawWhiteLine(xStart,yStart,xEnd,yEnd);
+        DrawToScreen();
+        usleep(3000000*i/partisi);
+        eraseWithBlackBox(xEnd,yEnd,xStart,yStart);
+        xStart = xEnd;
+        yStart = yEnd;
+        xEnd = xStart+(x2-x1)*(i-1)/partisi;
+        yEnd = (int) floor(m*xEnd+c+0.5);
     }
 }
 
