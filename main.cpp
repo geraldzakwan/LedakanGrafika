@@ -272,12 +272,12 @@ int detectKeyStroke() {
 
 void drawShooter(int xp, int yp, char mode) {
     //gambar tembakan dengan titik pusat lingkaran tembakan 
-    //(xp,yp)
+    //(yp,xp)
     switch (mode) {
         case'd':
         case 'D': {
-            posX = xp-50;
-            posY = yp+50;
+            posX = xp-38;
+            posY = yp+38;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp+25,yp-25,xp+50);
@@ -288,8 +288,8 @@ void drawShooter(int xp, int yp, char mode) {
             
         case 's':
         case 'S': {
-            posX = xp-45;
-            posY = yp+50;
+            posX = xp-50;
+            posY = yp;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
@@ -301,8 +301,8 @@ void drawShooter(int xp, int yp, char mode) {
 
         case 'a':
         case 'A': {
-            posX = xp-50;
-            posY = yp-50;
+            posX = xp-38;
+            posY = yp-38;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp-25,yp-25,xp-50);
@@ -310,6 +310,7 @@ void drawShooter(int xp, int yp, char mode) {
             drawWhiteLine(yp-25,xp-50,yp-50,xp-25);
             break;
         } 
+        default: {}
     }
 }
 
@@ -466,9 +467,9 @@ int main() {
     printf("masuk gambar arena\n");
 
     printf("masuk erase black box\n");
-    int xp = 150;
-    int yp = 274;
-    char KeyPressed;
+    int xp = 400;
+    int yp = 574;
+    char KeyPressed, lastCorrectState;
 
     int xawal = 50, yawal = 780;
     bool left = true;
@@ -484,7 +485,13 @@ int main() {
             //do nothing
         }
         KeyPressed = getchar();
-        drawShooter(xp,yp,KeyPressed);
+        if ((KeyPressed=='A')||(KeyPressed=='a') ||(KeyPressed=='S') ||(KeyPressed=='s') ||(KeyPressed=='D') ||(KeyPressed=='d')) {
+            drawShooter(xp,yp,KeyPressed);
+            lastCorrectState = KeyPressed;
+        }
+        else {
+            drawShooter(xp,yp,lastCorrectState);
+        }
 
         // draw UFO
         drawUFO(xawal, yawal);
@@ -506,10 +513,13 @@ int main() {
             // draw explosion
         }
 
-        DrawToScreen();
-        if (KeyPressed=='A') {
-            drawBullet(posX,posY,0,0,6);
-        }
+        DrawToScreen(); 
+        if ((KeyPressed=='A')||(KeyPressed=='a'))
+            drawBullet(posY,posX,0,0,10);
+        else if ((KeyPressed=='s')||(KeyPressed=='S'))
+            drawBullet(posY,posX,0,400,10);
+        else if ((KeyPressed=='D')||(KeyPressed=='d'))
+            drawBullet(posY,posX,0,800,10);
 
     } while (KeyPressed!='C');
 
