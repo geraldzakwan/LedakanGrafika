@@ -495,13 +495,14 @@ int main() {
             // draw explosion
         }
 
-        DrawToScreen();
+        DrawToScreen(); 
         if ((KeyPressed=='A')||(KeyPressed=='a'))
             drawBullet(posY,posX,0,0,10);
         else if ((KeyPressed=='s')||(KeyPressed=='S'))
             drawBullet(posY,posX,0,400,10);
         else if ((KeyPressed=='D')||(KeyPressed=='d'))
             drawBullet(posY,posX,0,800,10);
+
     } while (KeyPressed!='C');
 
     munmap(fbp, screensize);
