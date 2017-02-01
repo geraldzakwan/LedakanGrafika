@@ -351,6 +351,34 @@ void drawExplosion(int x,int y){
     //x = 70
     // bentuk bintang ada 8 garis sesuai dengan parameter titik pusat (x,y)
     int pointx1 = x-20, pointy1 =y+20;
+    int pointx3 = x+20, pointy3 =y+20;
+    int pointx5 = x+20, pointy5 =y-20;
+    int pointx7 = x-20, pointy7 =y-20;
+
+    int pointx2 = x, pointy2 = y+10;
+    int pointx4 = x+10, pointy4 = y;
+    int pointx6 = x, pointy6 = y-10;
+    int pointx8 = x-10, pointy8 = y;
+
+    //gambar ledakan
+    drawRedLine(pointx1,pointy1,pointx2,pointy2);
+    drawRedLine(pointx2,pointy2,pointx3,pointy3);
+    drawRedLine(pointx3,pointy3,pointx4,pointy4);
+    drawRedLine(pointx4,pointy4,pointx5,pointy5);
+    drawRedLine(pointx5,pointy5,pointx6,pointy6);
+    drawRedLine(pointx6,pointy6,pointx7,pointy7);
+    drawRedLine(pointx7,pointy7,pointx8,pointy8);
+    drawRedLine(pointx8,pointy8,pointx1,pointy1);
+    
+    //warnain 
+    floodFill(x,y,255,0,0,255,255,0);
+}
+
+
+void drawExplosion2(int x,int y){
+    //x = 70
+    // bentuk bintang ada 8 garis sesuai dengan parameter titik pusat (x,y)
+    int pointx1 = x-20, pointy1 =y+20;
     int pointx3 = x+30, pointy3 =y+30;
     int pointx5 = x+20, pointy5 =y-20;
     int pointx7 = x-30, pointy7 =y-30;
@@ -371,9 +399,8 @@ void drawExplosion(int x,int y){
     drawRedLine(pointx8,pointy8,pointx1,pointy1);
     
     //warnain 
-    floodFill(x,y,255,0,0,255,255,0);
+    floodFill(x,y,255,0,0,255,0,0);
 }
-
 
 void drawUFO(int x1, int y1) {
     drawWhiteLine(x1, y1, x1+20, y1+20);
@@ -548,7 +575,7 @@ int main() {
     drawFrame();
     drawShooter(xp,yp,lastCorrectState);
     drawStars();
-    drawExplosion(xawal,yawal);
+    drawExplosion2(xawal,yawal);
     DrawToScreen();
     
     
