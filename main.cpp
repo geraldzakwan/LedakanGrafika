@@ -10,10 +10,12 @@
 #include <cstdio>
 #include <termios.h>
 #include <math.h>
+#include <thread>
+#include <vector>
 
 using namespace std;
 
-#define HEIGHT 850
+#define HEIGHT 1250
 #define WIDTH 650
 
 struct fb_var_screeninfo vinfo;
@@ -25,8 +27,25 @@ int greenPixelMatrix[WIDTH][HEIGHT];
 int bluePixelMatrix[WIDTH][HEIGHT];
 int posX;
 int posY;
+int lastCorrectState = 's';
+bool exploded = false;
 
-bool exploded;
+struct bullet
+{
+    int xStart;
+    int yStart;
+    int xEnd;
+    int yEnd;
+    float m;
+    float c;
+    int partisi;
+    int iteration;
+    int x1;
+    int x2;
+    int n;
+};
+
+vector<bullet> bullets;
 
 void clearMatrix() {
     for (int i = 0; i < WIDTH; ++i)
@@ -156,8 +175,10 @@ void eraseWithBlackBox(int x1, int y1, int x2, int y2) {
     }    
 }
 
-void drawWhiteLine(int x1, int y1, int x2, int y2) {
+bool drawWhiteLine(int x1, int y1, int x2, int y2) {
 	//Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
+    bool ret = false;
+
     int deltaX = x2 - x1;
     int deltaY = y2 - y1;
     int ix = deltaX > 0 ? 1 : -1;
@@ -183,6 +204,10 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
             error += deltaY;
             x += ix;
  
+            
+            if (redPixelMatrix[x][y] == 255 && greenPixelMatrix[x][y] == 255 && bluePixelMatrix[x][y] == 255) {
+                ret = true;
+            }
             drawWhitePoint(x, y);
         }
     } else {
@@ -199,9 +224,14 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
             error += deltaX;
             y += iy;
  
+            
+            if (redPixelMatrix[x][y] == 255 && greenPixelMatrix[x][y] == 255 && bluePixelMatrix[x][y] == 255) {
+                ret = true;
+            }
             drawWhitePoint(x, y);
         }
     }
+    return ret;
 }
 
 
@@ -331,8 +361,8 @@ void drawShooter(int xp, int yp, char mode) {
     switch (mode) {
         case'd':
         case 'D': {
-            posX = xp-38;
-            posY = yp+38;
+            posX = xp+50;
+            posY = yp-50;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp+25,yp-25,xp+50);
@@ -343,8 +373,8 @@ void drawShooter(int xp, int yp, char mode) {
             
         case 's':
         case 'S': {
-            posX = xp-50;
-            posY = yp;
+            posX = xp;
+            posY = 500;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp-15,xp+20,yp-50,xp+20);
@@ -356,8 +386,8 @@ void drawShooter(int xp, int yp, char mode) {
 
         case 'a':
         case 'A': {
-            posX = xp-38;
-            posY = yp-38;
+            posX = xp-50;
+            posY = yp-50;
             eraseWithBlackBox(100,100,299,299);
             drawCircle(yp,xp,25);
             drawWhiteLine(yp,xp-25,yp-25,xp-50);
@@ -373,11 +403,9 @@ void DrawToScreen(){
     /* prosedure yang menggambar ke layar dari matriks RGB (harusnya rata tengah)*/
     long int location = 0;
     int x , y;
-    printf("before loop\n");
     for (y = vinfo.yres/2 - WIDTH/2; y < WIDTH + vinfo.yres/2 - WIDTH/2; y++)
         for (x = vinfo.xres/2 - HEIGHT/2; x < HEIGHT + vinfo.xres/2 - HEIGHT/2; x++) {
             location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
-            //printf("location: %ld\n",location);
             if (vinfo.bits_per_pixel == 32) { 
                 //4byte
                     *(fbp + location) = bluePixelMatrix[y - vinfo.yres/2 + WIDTH/2][x - vinfo.xres/2 + HEIGHT/2];        // Some blue
@@ -393,7 +421,6 @@ void DrawToScreen(){
                 *((unsigned short int*)(fbp + location)) = t;
             }
         }
-    printf("after loop\n");    
 }
 
 void drawExplosion(int x,int y){
@@ -423,71 +450,109 @@ void drawExplosion(int x,int y){
     floodFill(x,y,255,0,0,255,255,0);
 }
 
-void drawBullet(int x1, int y1, int x2, int y2 , int n)
+
+void drawUFO(int x1, int y1) {
+    drawWhiteLine(x1, y1, x1+20, y1+20);
+    drawWhiteLine(x1, y1, x1, y1-50);
+    drawWhiteLine(x1, y1-50, x1+20, y1-70);
+    drawWhiteLine(x1+20, y1-70, x1+20, y1+20);
+    /*
+    drawWhiteLine(50, 700, 70, 720);
+    drawWhiteLine(50, 700, 50, 650);
+    drawWhiteLine(50, 650, 70, 630);
+    drawWhiteLine(70, 630, 70, 720);
+    
+    //Gambar circle
+    drawSemiCircle(50, 225, 25);    
+    */
+    drawSemiCircle(x1, y1-25, 25);    
+}
+
+void drawFrame() {
+    drawWhiteLine(0, 0, 0, 1200);
+    drawWhiteLine(0, 1200, 600, 1200);
+    drawWhiteLine(600, 1200, 600, 0);
+    drawWhiteLine(600, 0, 0, 0);
+}
+
+void addBullet(int x1, int y1, int x2, int y2 , int n)
 //x1,y1 titik asal peluru
 //x2,y2 titik sampai peluru
 //n adalah pembagian tahap gerak peluru
 {
+    bullet newBullet;
     //persamaan garis
-    float m = (y2-y1);
-    m /= (x2-x1);
-    float c = y1 - m*x1;
+    newBullet.m = (y2-y1);
+    newBullet.m /= (x2-x1);
+    newBullet.c = y1 - newBullet.m * x1;
 
-    int partisi = 0;
+    newBullet.partisi = 0;
     for (int i=1;i<=n;i++) {
-        partisi += i;
+        newBullet.partisi += i;
     }
 
+    newBullet.xStart = x1;
+    newBullet.yStart = (int) floor(newBullet.m * newBullet.xStart + newBullet.c + 0.5);
+    newBullet.xEnd = x1 + (x2-x1) * n / newBullet.partisi;
+    newBullet.yEnd = (int) floor(newBullet.m * newBullet.xEnd + newBullet.c + 0.5);
 
-    int xStart = x1;
-    int yStart = (int) floor(m*xStart+c+0.5);
-    int xEnd = x1+(x2-x1)*n/partisi;
-    int yEnd = (int) floor(m*xEnd+c+0.5);
-    for (int i=n;i>0;i--) {
-        drawWhiteLine(xStart,yStart,xEnd,yEnd);
-        DrawToScreen();
-        usleep(3000000*i/partisi);
-        drawBlackLine(xEnd,yEnd,xStart,yStart);
-        xStart = xEnd;
-        yStart = yEnd;
-        xEnd = xStart+(x2-x1)*(i-1)/partisi;
-        yEnd = (int) floor(m*xEnd+c+0.5);
+    newBullet.x1 = x1;
+    newBullet.x2 = x2;
+    newBullet.iteration = n;
+    newBullet.n = n;
+
+    bullets.push_back(newBullet);
+}
+
+void drawKeyShooter(){
+    while(!exploded){
+        if(!detectKeyStroke()) {
+                char KeyPressed = getchar();
+                if ((KeyPressed=='A')||(KeyPressed=='a') ||(KeyPressed=='S') ||(KeyPressed=='s') ||(KeyPressed=='D') ||(KeyPressed=='d')) {
+                    //drawShooter(xp,yp,KeyPressed);
+                    lastCorrectState = KeyPressed;
+                } else if (KeyPressed==' ') {
+
+                    if (lastCorrectState == 'a')
+                        addBullet(posY,posX,0,0,20);
+                    else if (lastCorrectState == 's')
+                        addBullet(posY,posX,0,600,20);
+                    else if (lastCorrectState == 'd')
+                        addBullet(posY,posX,0,1200,20);
+                
+            }
+        }
     }
+        
 }
 
-void drawUFO() {
-    drawWhiteLine(50, 250, 70, 270);
-    drawWhiteLine(50, 250, 50, 200);
-    drawWhiteLine(50, 200, 70, 180);
-    drawWhiteLine(70, 180, 70, 270);
-    
-    //Gambar circle
-    drawSemiCircle(50, 225, 25);    
-    
-}
-
-void drawFrame() {
-    drawWhiteLine(0, 0, 0, 800);
-    drawWhiteLine(0, 800, 600, 800);
-    drawWhiteLine(600, 800, 600, 0);
-    drawWhiteLine(600, 0, 0, 0);
+void drawBullets() {
+    //persamaan garis
+    for (int i = bullets.size()-1; i >=0; --i)
+    {
+        if (bullets[i].iteration >0) {
+            if (drawWhiteLine(bullets[i].xStart,bullets[i].yStart,bullets[i].xEnd,bullets[i].yEnd)) exploded = true;
+            bullets[i].xStart = bullets[i].xEnd;
+            bullets[i].yStart = bullets[i].yEnd;
+            bullets[i].xEnd = bullets[i].xStart + (bullets[i].x2 - bullets[i].x1) * (bullets[i].iteration - 1) / bullets[i].partisi;
+            bullets[i].yEnd = (int) floor(bullets[i].m * bullets[i].xEnd + bullets[i].c + 0.5);
+            bullets[i].iteration--;
+        }   
+    }
 }
 
 int main() {
-    //printf("masuk\n");
-    clearMatrix();
-    printf("masuk clearMatrix\n");
+    clearMatrix();    
     
     int fbfd = 0;
     long int screensize = 0;
-   
+    exploded = false;
     
     fbfd = open("/dev/fb0", O_RDWR);
     if (fbfd == -1) {
         perror("Error: cannot open framebuffer device");
         exit(1);
     }
-    //printf("The framebuffer device was opened successfully.\n");
 
     // Get fixed screen information
     if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
@@ -499,67 +564,58 @@ int main() {
         perror("Error reading variable information");
         exit(3);
     }
-    //printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
 
     // mendapat screensize layar monitor
     screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
-    //printf("screensize %ld\n",screensize);
 
     // Map the device to memory
     fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, (off_t)0);
-    //printf("The framebuffer device was mapped to memory successfully.\n");
+
     //display merge center
     // Menulis ke layar tengah file
     //Gambar trapesium
-    drawUFO();
-
-    //Gambar arena, tapi gambarnya ancur karena bug yg gua ceritain tadi
-    printf("masuk gambar arena\n");
-
-    printf("masuk erase black box\n");
-    int xp = 400;
+    thread thread1(&drawKeyShooter);
+    int xp = 600;
     int yp = 574;
-    char KeyPressed, lastCorrectState;
+    char KeyPressed;
 
-    //gambar meledak
-    drawExplosion(70,100);
-
-    DrawToScreen();  
+    int xawal = 100, yawal = 1180;
+    bool left = true;
+    
     do {
         clearMatrix();
         drawFrame();
-        // draw shooter
-        while (!detectKeyStroke()) {
-            //do nothing
-        }
-        KeyPressed = getchar();
-        if ((KeyPressed=='A')||(KeyPressed=='a') ||(KeyPressed=='S') ||(KeyPressed=='s') ||(KeyPressed=='D') ||(KeyPressed=='d')) {
-            drawShooter(xp,yp,KeyPressed);
-            lastCorrectState = KeyPressed;
-        }
-        else {
-            drawShooter(xp,yp,lastCorrectState);
-        }
+        
+        drawShooter(xp,yp,lastCorrectState);
 
         // draw UFO
-        drawUFO();
-        // draw bullet
-
-        drawExplosion(100,100);
-        if (exploded) {
-            // draw explosion
+        drawUFO(xawal, yawal);
+        if(yawal-70<=0) {
+            left = false;
+        } else if(yawal+20>=1200) {
+            left = true;
         }
+        if (left) {
+            yawal -= 5;
+        } else {
+            yawal += 5;     
+        }
+        
+        // draw bullet
+        drawBullets(); 
 
         DrawToScreen(); 
-        if ((KeyPressed=='A')||(KeyPressed=='a'))
-            drawBullet(posY,posX,0,0,10);
-        else if ((KeyPressed=='s')||(KeyPressed=='S'))
-            drawBullet(posY,posX,0,400,10);
-        else if ((KeyPressed=='D')||(KeyPressed=='d'))
-            drawBullet(posY,posX,0,800,10);
-
-    } while (KeyPressed!='C');
-
+        usleep(50000);
+    } while (KeyPressed!='C' && !exploded);
+    thread1.detach();
+    clearMatrix();
+    drawFrame();
+    drawShooter(xp,yp,lastCorrectState);
+    drawExplosion(xawal,yawal);
+    //floodFill(xawal,yawal,255,0,0,255,255,0);
+    DrawToScreen();
+    
+    
     munmap(fbp, screensize);
     close(fbfd);
     
