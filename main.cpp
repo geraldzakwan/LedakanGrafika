@@ -68,6 +68,11 @@ void drawRedPoint(int x1,int y1){
     bluePixelMatrix[x1][y1] = 0;   
 }
 
+void drawBlackPoint(int x1,int y1){
+    redPixelMatrix[x1][y1] = 0;
+    greenPixelMatrix[x1][y1] = 0;
+    bluePixelMatrix[x1][y1] = 0;   
+}
 
 void floodFill(int x,int y,int redBatas,int greenBatas,int blueBatas,int redColor,int greenColor,int blueColor){
     if((x>=0 && x<HEIGHT) && (y>=0 && y<WIDTH)){
@@ -198,6 +203,56 @@ void drawWhiteLine(int x1, int y1, int x2, int y2) {
         }
     }
 }
+
+
+void drawBlackLine(int x1, int y1, int x2, int y2) {
+    //Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
+    int deltaX = x2 - x1;
+    int deltaY = y2 - y1;
+    int ix = deltaX > 0 ? 1 : -1;
+    int iy = deltaY > 0 ? 1 : -1;
+    deltaX = abs(deltaX);
+    deltaY = abs(deltaY);
+
+    int x = x1;
+    int y = y1;
+
+    drawBlackPoint(x,y);
+
+    if (deltaX >= deltaY) {
+        int error = 2 * deltaY - deltaX;
+
+        while (x != x2) {
+            if ((error >= 0) && (error || (ix > 0)))
+            {
+                error -= deltaX;
+                y += iy;
+            }
+ 
+            error += deltaY;
+            x += ix;
+ 
+            drawBlackPoint(x, y);
+        }
+    } else {
+        int error = 2 * deltaX - deltaY;
+
+        while (y != y2)
+        {
+            if ((error >= 0) && (error || (iy > 0)))
+            {
+                error -= deltaY;
+                x += ix;
+            }
+ 
+            error += deltaX;
+            y += iy;
+ 
+            drawBlackPoint(x, y);
+        }
+    }
+}
+
 
 void drawRedLine(int x1, int y1, int x2, int y2) {
     //Than kode lu gua benerin dikit di sini, harusnya ngk usah pake absolut
@@ -392,7 +447,7 @@ void drawBullet(int x1, int y1, int x2, int y2 , int n)
         drawWhiteLine(xStart,yStart,xEnd,yEnd);
         DrawToScreen();
         usleep(3000000*i/partisi);
-        eraseWithBlackBox(xEnd,yEnd,xStart,yStart);
+        drawBlackLine(xEnd,yEnd,xStart,yStart);
         xStart = xEnd;
         yStart = yEnd;
         xEnd = xStart+(x2-x1)*(i-1)/partisi;
